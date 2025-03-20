@@ -1,0 +1,778 @@
+{
+  "name": "Telegram Asistant_Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=#Rol:\nEres un asistente personal que ayuadará al usuario con la gestion de sus clientes\n\n##Tareas\nTu función principal es responder a este mensaje \n{{ $json.mensaje }}\n\n- Utliza la informción de la herramienta Clientes para encontrar datos de los clientes.\n\n- Utiliza la herramienta AgendarReuniones para agendar eventos y reuniones tomando de referencia la hora actual {{ $now }}. Solo debes agendar una reunion si el usuario te lo pide.\n\n- Utiliza la herramienta ListarReuniones para listar las reuniones que tenga el usuario ese día, semana, mes o año, según lo solicite.\n\n- Utiliza la herramienta EliminarReunion para borrar una reunion de la agenda si el usuario lo solicita.\n\n- Utiliza la herramienta EnviarEmail para mandar correos eltrónicos a los clientes.\n\n- Utiliza la herramienta EliminarCliente, para eliminar el registro de un cliente (es decir borrar su nombre, email y direccion), si el usuario lo solicita.\n\n- Utiliza la herramienta ActualizarListaClientes para añadir nuevo cliente o actualizar algun dato de uno ya existente en la lista, si el usuario lo solicita.\n\n##Notas\nTus respuestas deben ser claras y concisas no debe exceder los 200 caracateres.\n\n- Cuando agendes una reunion en el chat siempre pon un hipervinculo a dicha reunion en plan \"Puedes ver los detalles aquí\" ve cambiando convenientemente la frase para que sea más conversacional.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -340,
+        -840
+      ],
+      "id": "616f3bd7-abdf-4152-bcec-4b3322d86ad3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -420,
+        -560
+      ],
+      "id": "e1080d12-baac-445d-b626-174f230b9dfc",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "c7s9dpZ0y61Ga0yu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.mensaje }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        -560
+      ],
+      "id": "29fd0052-4e52-4986-b0e6-f2c04b1342c9",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $fromAI(\"emailAddress\", \"email del ciente\") }}",
+        "subject": "={{ $fromAI(\"subject\", \"Asunto del email\") }}",
+        "message": "={{ $fromAI(\"mensaje\", \"contenido del mensaje\") }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Expe  Avomo"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -60,
+        -640
+      ],
+      "id": "0f7f219d-ccc4-4498-a210-ec3216a232ac",
+      "name": "EnviarEmail",
+      "webhookId": "c0079e01-5891-4e12-887c-48906c1f1fd8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cn3lgV8YXzcghW8V",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "testingavomo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "testingavomo@gmail.com"
+        },
+        "start": "= {{ $fromAI(\"stratTime\") }}",
+        "end": "={{ $fromAI(\"endTime\") }}",
+        "additionalFields": {
+          "description": "={{ $fromAI(\"subject\") }}",
+          "summary": "={{ $fromAI(\"title\", \"El nombre de la reunión\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        40,
+        -620
+      ],
+      "id": "9851aca0-fbe2-4dd7-9f14-669137ab2620",
+      "name": "AgendarReuniones",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "0ckCYFtb4KFLImrF",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1560,
+        -780
+      ],
+      "id": "c0334d3a-34a5-4c08-b2c5-6069135f8f5f",
+      "name": "Telegram Trigger",
+      "webhookId": "2f622d65-5246-4a57-815f-6f4aa8508771",
+      "credentials": {
+        "telegramApi": {
+          "id": "UYBcngOdzglGg1Fk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "b04714cd-1eca-4cbd-8200-afc311452037"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0f25a988-5341-4079-97e0-d960e0953b43",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1340,
+        -780
+      ],
+      "id": "d499dfc5-9902-4db5-b622-07e8641478f7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "688bbf69-8d28-4c5c-9339-fe00c9442908",
+              "name": "mensaje",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -980,
+        -900
+      ],
+      "id": "66864417-d00d-4bef-9235-93308a1e700f",
+      "name": "texto"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        -680
+      ],
+      "id": "02c5159b-9292-4de0-9e85-9de1b3f23e9b",
+      "name": "Descargar audio",
+      "webhookId": "522b580d-ee1b-493b-86d3-bc9e7222f3b7",
+      "credentials": {
+        "telegramApi": {
+          "id": "UYBcngOdzglGg1Fk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "language",
+              "value": "es"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1040,
+        -480
+      ],
+      "id": "f64a5b9f-08ac-463f-803a-a300c34ab823",
+      "name": "Transcribe audio-Telegram",
+      "credentials": {
+        "openAiApi": {
+          "id": "c7s9dpZ0y61Ga0yu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1012fa45-10f2-4eaa-99ed-11047288a72c",
+              "name": "mensaje",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -900,
+        -680
+      ],
+      "id": "5cc0998a-b8f2-457c-9917-fb2a7a84ba2e",
+      "name": "Audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93f7808c-7c94-429e-a45c-75571590dc3d",
+              "name": "nombre",
+              "value": "={{ $('Switch').item.json.message.chat.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d5c1570d-d566-424e-983c-3313537f519b",
+              "name": "chat_id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "2586cd66-3113-4e12-8a9d-fdf8cb65869f",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "ignoreConversionErrors": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -620,
+        -820
+      ],
+      "id": "1b905cbd-e679-4596-92cb-c25a40a722c6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        20,
+        -840
+      ],
+      "id": "46ea7aee-3043-4fa4-8992-0a4d83b7e85b",
+      "name": "Telegram",
+      "webhookId": "bea8ef81-1dbc-463c-bd59-b7ebe8a33113",
+      "credentials": {
+        "telegramApi": {
+          "id": "UYBcngOdzglGg1Fk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU",
+          "mode": "list",
+          "cachedResultName": "Clientes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 812172144,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU/edit#gid=812172144"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -120,
+        -560
+      ],
+      "id": "6cb530fb-13c4-4be9-96db-bd88627133a3",
+      "name": "Clientes",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6PWFHcNTgzZU3iik",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "remove",
+        "documentId": {
+          "__rl": true,
+          "value": "13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU",
+          "mode": "list",
+          "cachedResultName": "Clientes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 812172144,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU/edit#gid=812172144"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        420,
+        -620
+      ],
+      "id": "edd4a221-c775-4e88-b1e4-e21e0f233181",
+      "name": "EliminarCliente",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6PWFHcNTgzZU3iik",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU",
+          "mode": "list",
+          "cachedResultName": "Clientes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 812172144,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13yXOCu2gaLVoDOABMIlVUXlf5ON6UNQtC86HGmdw8kU/edit#gid=812172144"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Nombre__using_to_match_', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+            "Direccion": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Direccion', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "Nombre"
+          ],
+          "schema": [
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Direccion",
+              "displayName": "Direccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        620,
+        -620
+      ],
+      "id": "4f742178-5408-41a2-9afa-8111e8b2b653",
+      "name": "ActualizarListaClientes",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6PWFHcNTgzZU3iik",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "testingavomo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "testingavomo@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        -620
+      ],
+      "id": "8f01611c-460c-4501-acda-3b7f91cc47a9",
+      "name": "ListarReuniones",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "0ckCYFtb4KFLImrF",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "testingavomo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "testingavomo@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        220,
+        -620
+      ],
+      "id": "b5ec7f8a-6ed3-4003-9ee5-3e25e001b756",
+      "name": "EliminarReunion",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "0ckCYFtb4KFLImrF",
+          "name": "Google Calendar account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EnviarEmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AgendarReuniones": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "texto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Descargar audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio-Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio-Telegram": {
+      "main": [
+        [
+          {
+            "node": "Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "texto": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clientes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EliminarCliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ActualizarListaClientes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ListarReuniones": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EliminarReunion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "bb235a25-6b0d-451e-a106-6ff2a78eb423",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2cf7c6b49b794dc5dd708bf3a2e40826bcbb5fdf567b70a644746a7dea473bf8"
+  },
+  "id": "2xpjRsc7A3icyeWg",
+  "tags": []
+}
