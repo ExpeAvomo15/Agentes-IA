@@ -1,0 +1,656 @@
+{
+  "name": "Ecom_Agente",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=#Rol\nEres un asistente capaz de responder preguntas del usuario sobre el ecommerce\n\n#Tarea\n- Tu función principal es responder a este mensaje: {{ $json.mensaje }}\n\nUtiliza información de la herramienta ListaProductos para consultas sobre productos del Ecommerce\n\nUtiliza información de la herraienta Ecommerce para cualquier consulta relacionada con el funcioanamiento del Ecommercer\n\n#Notas\n- Tus respuestas deben ser claras y concisas, amables y cercanas añade emojis cunado lo veas necesario no debes exceder los 200 caracteres\n\n- Si el cliente decide comparar el producto puedes pasarle un enlace para que pague. El enlace es https://thereversepodcast.es y debe ir siemepre a un hipervinculo\n\n- Hazle Upselling al cliente también para mejorar su experiencia de compra, si pregunta por un producto, también recomiendale uno complementario (y pon el link de compra)\n\n- Pon un link de compara para el producto solicitado y otro link de compara para el prducto complementario\n\n- Habla de manera persuasiva para que el cliente no perciba caros los productos, intenta ir a lo emocional pero sin exagerar\n\n- Los hipervinculos de compra deben acabar con un cta calaro (por ej: consiguelo aqui, etc...) y al vez creativos, no deben repetirse entre mensajes durante el chat.\n\n- No saludes siempre en el mismo chat, con saludar la primera vez ya es suficiente.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -900,
+        -760
+      ],
+      "id": "830001ed-3fee-4a35-a375-d98cff22e710",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1020,
+        -560
+      ],
+      "id": "3ab9f188-f47f-4a2f-ad74-704c6483e25f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "c7s9dpZ0y61Ga0yu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "ecomtutorial",
+          "mode": "list",
+          "cachedResultName": "ecomtutorial"
+        },
+        "options": {
+          "pineconeNamespace": "name_ecom"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        -360
+      ],
+      "id": "244d184a-b8c0-4d07-993d-e1ae93302879",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "xZ0GzAXvDSwoVgEo",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -160
+      ],
+      "id": "2e3266b4-cc73-49ec-9c9d-44e4b4edb5fb",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "c7s9dpZ0y61Ga0yu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1D0c94-XOHwRHHp8-ROj15G5EeGpnN5FfyoAau9c97QQ",
+          "mode": "list",
+          "cachedResultName": "Productos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D0c94-XOHwRHHp8-ROj15G5EeGpnN5FfyoAau9c97QQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1300892320,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D0c94-XOHwRHHp8-ROj15G5EeGpnN5FfyoAau9c97QQ/edit#gid=1300892320"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -700,
+        -500
+      ],
+      "id": "8b68dbe0-c824-41df-949d-11dad89e3936",
+      "name": "ListaProductos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6PWFHcNTgzZU3iik",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Ecommerce",
+        "description": "Esta herramienta va a dar información sobre el funcionameinto del Ecommerce"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        -500
+      ],
+      "id": "6199a0de-fabb-472b-9411-7fffd6e701a0",
+      "name": "Documentos_Ecommerce"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.mensaje }}",
+        "tableName": "chat_ecommerce"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -840,
+        -520
+      ],
+      "id": "60a674c3-b40d-442a-9044-82a8332c0c1f",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "eO8ZRqQO7PnNJzhL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2260,
+        -680
+      ],
+      "id": "9ea22589-1b6b-4613-9208-6dd7738a7f1b",
+      "name": "Telegram Trigger",
+      "webhookId": "bd2fb8ab-bc69-46a8-a19f-f93a202d7d01",
+      "credentials": {
+        "telegramApi": {
+          "id": "AVqpPWJZ5A0vz0Be",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -500,
+        -180
+      ],
+      "id": "c0f295c2-4c0e-416c-a50c-104fb4474f2c",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "c7s9dpZ0y61Ga0yu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -220,
+        -760
+      ],
+      "id": "b7f1e609-d3a0-4776-afe4-d8f7d3292195",
+      "name": "Telegram",
+      "webhookId": "ea57a400-9fc9-4151-94a7-3e44e8654fda",
+      "credentials": {
+        "telegramApi": {
+          "id": "AVqpPWJZ5A0vz0Be",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "0d00c88a-3832-4d2a-9e3a-f6185a06e897"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f82a9bab-e62a-4f0f-9a91-2ca78f6084c6",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c7e7b872-2c9d-4452-831f-5494284b1379",
+                    "leftValue": "={{ $json.message.document }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "documento"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2040,
+        -700
+      ],
+      "id": "4a902304-c060-4a6b-b32a-9642e79977ad",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3ce4006f-9b24-4a6d-8b02-fe28b558aeb0",
+              "name": "mensaje",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1560,
+        -920
+      ],
+      "id": "83ed1a80-d246-461f-ab4f-6d06a387b31a",
+      "name": "texto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "88cd9efb-fea6-4f21-96ad-381c3eb1f32b",
+              "name": "nombre",
+              "value": "={{ $('Switch').item.json.message.chat.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "830fe9e4-5cc5-4339-8921-cf09cdd75fb0",
+              "name": "chat_id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "236c1bd9-af8d-410c-9f36-69d0aa479108",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1260,
+        -760
+      ],
+      "id": "5280cebd-9990-46ad-93c5-849610e28095",
+      "name": "Entrada datos"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1720,
+        -660
+      ],
+      "id": "36459474-fd1f-42eb-bdf4-73a8b9da9f78",
+      "name": "Descargar Audio",
+      "webhookId": "308caa04-696b-40f2-8399-e9fad41e3c6f",
+      "credentials": {
+        "telegramApi": {
+          "id": "AVqpPWJZ5A0vz0Be",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "language",
+              "value": "es"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1560,
+        -480
+      ],
+      "id": "2c3d1c4c-4753-4fe6-b69f-6542166aaeca",
+      "name": "Transcribe audio-Telegram",
+      "credentials": {
+        "openAiApi": {
+          "id": "c7s9dpZ0y61Ga0yu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "51aaeaa7-241b-4c64-9cdc-dd766fe37465",
+              "name": "mensaje",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1400,
+        -580
+      ],
+      "id": "45986356-a8d4-4fc6-bda9-7d2124c85a04",
+      "name": "Audio"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Documentos_Ecommerce",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Documentos_Ecommerce",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ListaProductos": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documentos_Ecommerce": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "texto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Descargar Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "texto": {
+      "main": [
+        [
+          {
+            "node": "Entrada datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio-Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio-Telegram": {
+      "main": [
+        [
+          {
+            "node": "Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio": {
+      "main": [
+        [
+          {
+            "node": "Entrada datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada datos": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "514e2143-fe03-41a1-bc61-7115c220563d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2cf7c6b49b794dc5dd708bf3a2e40826bcbb5fdf567b70a644746a7dea473bf8"
+  },
+  "id": "OKMjxFPVPH06EtTG",
+  "tags": []
+}
